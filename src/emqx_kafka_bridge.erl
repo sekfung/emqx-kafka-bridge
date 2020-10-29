@@ -90,10 +90,11 @@ brod_init(_Env) ->
   %ok = brod:start_producer(brod_client_1, DsTopic, _ProducerConfig = []),
   ?LOG(info, "Init brod kafka client with ~p", [BootstrapBrokers]).
 
-on_client_connected(_ConnAck, Client = #{
+on_client_connected(Client = #{
   clientid := ClientId,
-  username := Username,
-  connected_at := ConnectedAt}, _Env) ->
+  username := Username}, _Conn = #{
+  connected_at := ConnectedAt
+}, _Env) ->
   ?LOG(info, "Client ~s connected.", [ClientId]),
   Json = mochijson2:encode([
     {type, <<"connected">>},
@@ -107,9 +108,9 @@ on_client_connected(_ConnAck, Client = #{
 
 on_client_disconnected(_Client = #{
   clientid := ClientId,
-  username := Username,
-  connected_at := ConnectedAt}, Reason,
+  username := Username}, Reason,
     _Conn = #{
+      connected_at := ConnectedAt,
       disconnected_at := DisconnectedAt
     }, _Env) ->
   ?LOG(info, "Client ~s disconnected, reason: ~w", [ClientId, Reason]),

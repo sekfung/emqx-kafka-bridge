@@ -20,10 +20,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2c9463e1-8086-40e2-b04e-1cf8d3da5105" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/emqx-kafka-bridge.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/emqx-kafka-bridge.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/rebar.config" beforeDir="false" afterPath="$PROJECT_DIR$/rebar.config" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/emqx_kafka_bridge.app.src" beforeDir="false" afterPath="$PROJECT_DIR$/src/emqx_kafka_bridge.app.src" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/emqx_kafka_bridge.erl" beforeDir="false" afterPath="$PROJECT_DIR$/src/emqx_kafka_bridge.erl" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -110,7 +108,7 @@
       <workItem from="1603957359814" duration="7000" />
       <workItem from="1603957379928" duration="14000" />
       <workItem from="1603957404717" duration="3891000" />
-      <workItem from="1603961423739" duration="7448000" />
+      <workItem from="1603961423739" duration="9294000" />
     </task>
     <servers />
   </component>
@@ -159,10 +157,10 @@
     </state>
     <state width="1878" height="317" key="GridCell.Tab.0.right/510.-1057.1920.1057/0.23.1280.716/-1410.-1057.1920.1057@510.-1057.1920.1057" timestamp="1603335104838" />
     <state width="1878" height="317" key="GridCell.Tab.0.right/510.-1057.1920.969/0.23.1280.777/-1410.-1057.1920.1057@510.-1057.1920.969" timestamp="1603336774395" />
-    <state x="1232" y="-940" width="822" height="822" key="find.popup" timestamp="1603967817544">
+    <state x="1232" y="-940" width="822" height="822" key="find.popup" timestamp="1603970791079">
       <screen x="565" y="-1057" width="1920" height="1057" />
     </state>
-    <state x="1232" y="-940" width="822" height="822" key="find.popup/-1355.-1093.1920.1057/0.23.1235.777/565.-1057.1920.1057@565.-1057.1920.1057" timestamp="1603967817544" />
+    <state x="1232" y="-940" width="822" height="822" key="find.popup/-1355.-1093.1920.1057/0.23.1235.777/565.-1057.1920.1057@565.-1057.1920.1057" timestamp="1603970791079" />
     <state x="1232" y="-940" width="822" height="822" key="find.popup/-1355.-1093.1920.1057/0.23.1237.777/565.-1057.1920.1057@565.-1057.1920.1057" timestamp="1603964475251" />
     <state x="1172" y="-940" width="822" height="822" key="find.popup/505.-1057.1920.1057/-775.-1001.1280.1001/0.23.1280.717@505.-1057.1920.1057" timestamp="1603361523706" />
     <state x="1177" y="-940" width="586" height="822" key="find.popup/510.-1057.1920.1057/0.23.1280.714/-1410.-1057.1920.1057@510.-1057.1920.1057" timestamp="1603334409482" />

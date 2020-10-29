@@ -1,5 +1,5 @@
 {application, emqx_kafka_bridge,
- [{description, "EMQ X Plugin Template"},
+ [{description, "EMQ X Kafka Bridge Plugin"},
   {vsn, "git"},
   {modules, []},
   {registered, [emqx_kafka_bridge_sup]},
