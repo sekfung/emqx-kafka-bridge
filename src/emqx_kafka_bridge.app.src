@@ -3,7 +3,7 @@
   {vsn, "git"},
   {modules, []},
   {registered, [emqx_kafka_bridge_sup]},
-  {applications, [kernel,stdlib, brod]},
+  {applications, [kernel,stdlib, brod, mochiweb]},
   {mod, {emqx_kafka_bridge_app,[]}},
   {env, []},
   {licenses, ["Apache-2.0"]},

@@ -29,7 +29,7 @@
 
 %% Hooks functions
 
--export([on_client_connected/3, on_client_disconnected/3]).
+-export([on_client_connected/3, on_client_disconnected/4]).
 
 -export([on_client_subscribe/4, on_client_unsubscribe/4]).
 
@@ -47,7 +47,7 @@ register_metrics() ->
 load(Env) ->
   brod_init([Env]),
   emqx:hook('client.connected', fun ?MODULE:on_client_connected/3, [Env]),
-  emqx:hook('client.disconnected', fun ?MODULE:on_client_disconnected/3, [Env]),
+  emqx:hook('client.disconnected', fun ?MODULE:on_client_disconnected/4, [Env]),
   emqx:hook('client.subscribe', fun ?MODULE:on_client_subscribe/4, [Env]),
   emqx:hook('client.unsubscribe', fun ?MODULE:on_client_unsubscribe/4, [Env]),
   emqx:hook('session.created', fun ?MODULE:on_session_created/3, [Env]),
@@ -88,11 +88,11 @@ brod_init(_Env) ->
   % Start a Producer on Demand
   %ok = brod:start_producer(brod_client_1, DpTopic, _ProducerConfig = []),
   %ok = brod:start_producer(brod_client_1, DsTopic, _ProducerConfig = []),
-  lager:info("Init brod kafka client with ~p", [BootstrapBrokers]).
+  ?LOG(info, "Init brod kafka client with ~p", [BootstrapBrokers]).
 
 on_client_connected(_ConnAck, Client = #{
-  clientid    := ClientId,
-  username     := Username,
+  clientid := ClientId,
+  username := Username,
   connected_at := ConnectedAt}, _Env) ->
   ?LOG(info, "Client ~s connected.", [ClientId]),
   Json = mochijson2:encode([
@@ -100,63 +100,65 @@ on_client_connected(_ConnAck, Client = #{
     {clientid, ClientId},
     {username, Username},
     {cluster_node, node()},
-    {ts, emqx_time:now_ms(ConnectedAt)}
+    {ts, ConnectedAt}
   ]),
   ok = produce_status(ClientId, Json),
   {ok, Client}.
 
-on_client_disconnected(Reason, _Client = #{
-  clientid    := ClientId,
-  username     := Username,
-  connected_at := ConnectedAt}, _Env) ->
-  ?LOG(info,"Client ~s disconnected, reason: ~w", [ClientId, Reason]),
+on_client_disconnected(_Client = #{
+  clientid := ClientId,
+  username := Username,
+  connected_at := ConnectedAt}, Reason,
+    _Conn = #{
+      disconnected_at := DisconnectedAt
+    }, _Env) ->
+  ?LOG(info, "Client ~s disconnected, reason: ~w", [ClientId, Reason]),
   Json = mochijson2:encode([
     {type, <<"disconnected">>},
     {clientid, ClientId},
     {username, Username},
     {cluster_node, node()},
     {reason, Reason},
-    {ts, emqx_time:now_ms(ConnectedAt)}
+    {ts, ConnectedAt},
+    {disconnected_at, DisconnectedAt}
   ]),
   ok = produce_status(ClientId, Json),
   ok.
 
 on_client_subscribe(ClientId, Username, TopicTable, _Env) ->
-  ?LOG(info,"Client(~s/~s) will subscribe: ~p", [Username, ClientId, TopicTable]),
+  ?LOG(info, "Client(~s/~s) will subscribe: ~p", [Username, ClientId, TopicTable]),
   {ok, TopicTable}.
 
 on_client_unsubscribe(ClientId, Username, TopicTable, _Env) ->
-  ?LOG(info,"Client(~s/~s) unsubscribe ~p", [ClientId, Username, TopicTable]),
+  ?LOG(info, "Client(~s/~s) unsubscribe ~p", [ClientId, Username, TopicTable]),
   {ok, TopicTable}.
 
 on_session_created(ClientId, Username, _Env) ->
-  ?LOG(info,"Session(~s/~s) created.", [ClientId, Username]).
+  ?LOG(info, "Session(~s/~s) created.", [ClientId, Username]).
 
 on_session_subscribed(ClientId, Username, {Topic, Opts}, _Env) ->
-  ?LOG(info,"Session(~s/~s) subscribed: ~p~n", [Username, ClientId, {Topic, Opts}]),
+  ?LOG(info, "Session(~s/~s) subscribed: ~p~n", [Username, ClientId, {Topic, Opts}]),
   {ok, {Topic, Opts}}.
 
 on_session_unsubscribed(ClientId, Username, {Topic, Opts}, _Env) ->
-  ?LOG(info,"Session(~s/~s) unsubscribed: ~p~n", [Username, ClientId, {Topic, Opts}]),
+  ?LOG(info, "Session(~s/~s) unsubscribed: ~p~n", [Username, ClientId, {Topic, Opts}]),
   ok.
 
 on_session_terminated(ClientId, Username, Reason, _Env) ->
-  ?LOG(info,"Session(~s/~s) terminated: ~p.~n", [ClientId, Username, Reason]).
+  ?LOG(info, "Session(~s/~s) terminated: ~p.~n", [ClientId, Username, Reason]).
 
 %% transform message and return
-on_message_publish(Message = #{topic := <<"$SYS/", _/binary>>}, _Env) ->
+on_message_publish(Message = #message{topic = <<"$SYS/", _/binary>>}, _Env) ->
+  ?LOG(info, "Message Publish (~s) : ~p", [Message]),
   {ok, Message};
 
-on_message_publish(Message = #{
-  from      := {ClientId, Username},
-  pktid     := _PkgId,
-  qos       := QoS,
-  retain    := Retain,
-  dup       := Dup,
-  topic     := Topic,
-  payload   := Payload,
-  timestamp := Timestamp}, _Env) ->
-  ?LOG(info,"Publish ~s~n", [emqx_message:format(Message)]),
+on_message_publish(Message = #message{
+  from = {ClientId, Username},
+  qos = QoS,
+  topic = Topic,
+  payload = Payload,
+  timestamp = Timestamp}, _Env) ->
+  ?LOG(info, "Publish ~s~n", [emqx_message:format(Message)]),
   Json = mochijson2:encode([
     {type, <<"published">>},
     {clientid, ClientId},
@@ -164,20 +166,18 @@ on_message_publish(Message = #{
     {topic, Topic},
     {payload, Payload},
     {qos, QoS},
-    {dup, Dup},
-    {retain, Retain},
     {cluster_node, node()},
-    {ts, emqx_time:now_ms(Timestamp)}
+    {ts, emqx_misc:now_to_ms(Timestamp)}
   ]),
   ok = produce_points(ClientId, Json),
   {ok, Message}.
 
 on_message_delivered(ClientId, Username, Message, _Env) ->
-  ?LOG(info,"Delivered to client(~s/~s): ~s", [Username, ClientId, emqx_message:format(Message)]),
+  ?LOG(info, "Delivered to client(~s/~s): ~s", [Username, ClientId, emqx_message:format(Message)]),
   {ok, Message}.
 
 on_message_acked(ClientId, Username, Message, _Env) ->
-  ?LOG(info,"Client(~s/~s) acked: ~s", [Username, ClientId, emqx_message:format(Message)]),
+  ?LOG(info, "Client(~s/~s) acked: ~s", [Username, ClientId, emqx_message:format(Message)]),
   {ok, Message}.
 
 produce_points(ClientId, Json) ->
@@ -192,7 +192,7 @@ produce_status(ClientId, Json) ->
 
 produce(TopicInfo, ClientId, Json) ->
   case TopicInfo of
-    {ok, Topic, custom, _}->
+    {ok, Topic, custom, _} ->
       brod_produce(Topic, hash, ClientId, Json);
     {ok, Topic, _, _} ->
       brod_produce(Topic, random, ClientId, Json)
@@ -203,13 +203,13 @@ brod_produce(Topic, Partitioner, ClientId, Json) ->
   receive
     #brod_produce_reply{call_ref = CallRef, result = brod_produce_req_acked} -> ok
   after 5000 ->
-    ?LOG(error,"Produce message to ~p for ~p timeout.",[Topic, ClientId])
+    ?LOG(error, "Produce message to ~p for ~p timeout.", [Topic, ClientId])
   end,
   ok.
 
 %% 从配置中获取当前Kafka的初始broker配置
 get_bootstrap_brokers() ->
-  application:get_env(?APP, broker).
+  application:get_env(?APP, bootstrap_brokers).
 
 get_config_prop_list() ->
   application:get_env(?APP, config).
@@ -237,9 +237,9 @@ get_topic(Values) ->
 
 %% Called when the plugin application stop
 unload() ->
-  ?LOG(info,"Unhooking the emq callbacks."),
+  ?LOG(info, "Unhooking the emq callbacks."),
   emqx:unhook('client.connected', fun ?MODULE:on_client_connected/3),
-  emqx:unhook('client.disconnected', fun ?MODULE:on_client_disconnected/3),
+  emqx:unhook('client.disconnected', fun ?MODULE:on_client_disconnected/4),
   emqx:unhook('client.subscribe', fun ?MODULE:on_client_subscribe/4),
   emqx:unhook('client.unsubscribe', fun ?MODULE:on_client_unsubscribe/4),
   emqx:unhook('session.created', fun ?MODULE:on_session_created/3),
@@ -249,10 +249,10 @@ unload() ->
   emqx:unhook('message.publish', fun ?MODULE:on_message_publish/2),
   emqx:unhook('message.delivered', fun ?MODULE:on_message_delivered/4),
   emqx:unhook('message.acked', fun ?MODULE:on_message_acked/4),
-  ?LOG(info,"Stopping brod kafka client."),
+  ?LOG(info, "Stopping brod kafka client."),
   % It is ok to leave brod application there.
   brod:stop_client(brod_client_1),
-  ?LOG(info,"Finished all unload works.").
+  ?LOG(info, "Finished all unload works.").
 
 
 

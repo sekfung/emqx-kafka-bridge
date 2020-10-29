@@ -20,7 +20,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2c9463e1-8086-40e2-b04e-1cf8d3da5105" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/emqx-kafka-bridge.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/emqx-kafka-bridge.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/rebar.config" beforeDir="false" afterPath="$PROJECT_DIR$/rebar.config" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/emqx_kafka_bridge.erl" beforeDir="false" afterPath="$PROJECT_DIR$/src/emqx_kafka_bridge.erl" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -55,6 +58,9 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="project.structure.last.edited" value="SDKs" />
+    <property name="project.structure.proportion" value="0.0" />
+    <property name="project.structure.side.proportion" value="0.2" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -63,6 +69,19 @@
     </key>
   </component>
   <component name="RunManager">
+    <configuration default="true" type="ArquillianTestNG" factoryName="" nameIsGenerated="true">
+      <option name="arquillianRunConfiguration">
+        <value>
+          <option name="containerStateName" value="" />
+        </value>
+      </option>
+      <option name="TEST_OBJECT" value="CLASS" />
+      <properties />
+      <listeners />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="app" type="MAKEFILE_TARGET_RUN_CONFIGURATION" factoryName="Makefile" temporary="true">
       <makefile filename="$PROJECT_DIR$/Makefile" target="app" workingDirectory="" arguments="">
         <envs />
@@ -90,7 +109,8 @@
       <workItem from="1603952285666" duration="2745000" />
       <workItem from="1603957359814" duration="7000" />
       <workItem from="1603957379928" duration="14000" />
-      <workItem from="1603957404717" duration="1007000" />
+      <workItem from="1603957404717" duration="3891000" />
+      <workItem from="1603961423739" duration="7448000" />
     </task>
     <servers />
   </component>
@@ -107,6 +127,10 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
+    <state x="1013" y="-947" key="#Project_Structure" timestamp="1603958870289">
+      <screen x="565" y="-1057" width="1920" height="1057" />
+    </state>
+    <state x="1013" y="-947" key="#Project_Structure/-1355.-1093.1920.1057/0.23.1235.777/565.-1057.1920.1057@565.-1057.1920.1057" timestamp="1603958870289" />
     <state x="1183" y="-763" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1603345261556">
       <screen x="505" y="-1057" width="1920" height="1057" />
     </state>
@@ -135,10 +159,11 @@
     </state>
     <state width="1878" height="317" key="GridCell.Tab.0.right/510.-1057.1920.1057/0.23.1280.716/-1410.-1057.1920.1057@510.-1057.1920.1057" timestamp="1603335104838" />
     <state width="1878" height="317" key="GridCell.Tab.0.right/510.-1057.1920.969/0.23.1280.777/-1410.-1057.1920.1057@510.-1057.1920.969" timestamp="1603336774395" />
-    <state x="1232" y="-940" width="822" height="822" key="find.popup" timestamp="1603956095160">
+    <state x="1232" y="-940" width="822" height="822" key="find.popup" timestamp="1603967817544">
       <screen x="565" y="-1057" width="1920" height="1057" />
     </state>
-    <state x="1232" y="-940" width="822" height="822" key="find.popup/-1355.-1093.1920.1057/0.23.1235.777/565.-1057.1920.1057@565.-1057.1920.1057" timestamp="1603956095160" />
+    <state x="1232" y="-940" width="822" height="822" key="find.popup/-1355.-1093.1920.1057/0.23.1235.777/565.-1057.1920.1057@565.-1057.1920.1057" timestamp="1603967817544" />
+    <state x="1232" y="-940" width="822" height="822" key="find.popup/-1355.-1093.1920.1057/0.23.1237.777/565.-1057.1920.1057@565.-1057.1920.1057" timestamp="1603964475251" />
     <state x="1172" y="-940" width="822" height="822" key="find.popup/505.-1057.1920.1057/-775.-1001.1280.1001/0.23.1280.717@505.-1057.1920.1057" timestamp="1603361523706" />
     <state x="1177" y="-940" width="586" height="822" key="find.popup/510.-1057.1920.1057/0.23.1280.714/-1410.-1057.1920.1057@510.-1057.1920.1057" timestamp="1603334409482" />
     <state x="1177" y="-940" width="822" height="822" key="find.popup/510.-1057.1920.1057/0.23.1280.716/-1410.-1057.1920.1057@510.-1057.1920.1057" timestamp="1603335373690" />
@@ -146,5 +171,9 @@
       <screen x="505" y="-1057" width="1920" height="1057" />
     </state>
     <state x="888" y="-866" key="new project wizard/0.23.1280.714/-775.-1001.1280.1001/505.-1057.1920.1057@505.-1057.1920.1057" timestamp="1602325608803" />
+    <state x="1190" y="-822" width="670" height="676" key="search.everywhere.popup" timestamp="1603962688008">
+      <screen x="565" y="-1057" width="1920" height="1057" />
+    </state>
+    <state x="1190" y="-822" width="670" height="676" key="search.everywhere.popup/-1355.-1093.1920.1057/0.23.1235.777/565.-1057.1920.1057@565.-1057.1920.1057" timestamp="1603962688008" />
   </component>
 </project>
