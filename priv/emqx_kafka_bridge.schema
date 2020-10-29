@@ -1,0 +1,75 @@
+%%-*- mode: erlang -*-
+%% emqx_kafka_bridge config mapping
+
+
+{mapping, "kafka.brokers", "emqx_kafka_bridge.bootstrap_brokers", [
+  {default, "127.0.0.1:9092"},
+  {datatype, string}
+]}.
+
+{translation, "emqx_kafka_bridge.bootstrap_brokers", fun(Conf) ->
+  Brokers = cuttlefish:conf_get("kafka.brokers", Conf),
+  BrokerList = string:tokens(Brokers, ","),
+  BrokerParser = fun(Broker) ->
+    [Host|[PortStr|Rest]] = string:tokens(Broker, ":"),
+    Port = list_to_integer(PortStr),
+    {Host, Port}
+  end,
+  lists:map(BrokerParser, BrokerList)
+  end}.
+
+{mapping, "kafka.config.instrument", "emqx_kafka_bridge.config", [
+  {default, false},
+  {datatype, {enum, [true, false]}}
+]}.
+
+{translation, "emqx_kafka_bridge.config", fun(Conf) ->
+  Instrument = cuttlefish:conf_get("kafka.config.instrument", Conf),
+  [{instrument, Instrument}]
+  end}.
+
+{mapping, "kafka.points.topic", "emqx_kafka_bridge.points", [
+  {default, "device-data-points"},
+  {datatype, string}
+]}.
+
+{mapping, "kafka.points.partition.strategy", "emqx_kafka_bridge.points", [
+  {default, "strict_round_robin"},
+  {datatype, string}
+]}.
+
+{mapping, "kafka.points.partition.workers", "emqx_kafka_bridge.points", [
+  {default, 8},
+  {datatype, integer}
+]}.
+
+{translation, "emqx_kafka_bridge.points", fun(Conf) ->
+  Topic = cuttlefish:conf_get("kafka.points.topic", Conf),
+  PartitionStrategy = cuttlefish:conf_get("kafka.points.partition.strategy", Conf),
+  PartitionWorkers = cuttlefish:conf_get("kafka.points.partition.workers", Conf),
+  [{topic, list_to_binary(Topic)}, {partition_strategy, list_to_atom(PartitionStrategy)}, {partition_workers, PartitionWorkers}]
+  end}.
+
+{mapping, "kafka.status.topic", "emqx_kafka_bridge.status", [
+  {default, "device-data-points"},
+  {datatype, string}
+]}.
+
+{mapping, "kafka.status.partition.strategy", "emqx_kafka_bridge.status", [
+  {default, "strict_round_robin"},
+  {datatype, string}
+]}.
+
+{mapping, "kafka.status.partition.workers", "emqx_kafka_bridge.status", [
+  {default, 8},
+  {datatype, integer}
+]}.
+
+{translation, "emqx_kafka_bridge.status", fun(Conf) ->
+  Topic = cuttlefish:conf_get("kafka.status.topic", Conf),
+  PartitionStrategy = cuttlefish:conf_get("kafka.status.partition.strategy", Conf),
+  PartitionWorkers = cuttlefish:conf_get("kafka.status.partition.workers", Conf),
+  [{topic, list_to_binary(Topic)}, {partition_strategy, list_to_atom(PartitionStrategy)}, {partition_workers, PartitionWorkers}]
+  end}.
+
+

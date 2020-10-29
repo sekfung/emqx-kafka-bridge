@@ -1,0 +1,14 @@
+{application, emqx_kafka_bridge,
+ [{description, "EMQ X Plugin Template"},
+  {vsn, "git"},
+  {modules, []},
+  {registered, [emqx_kafka_bridge_sup]},
+  {applications, [kernel,stdlib, brod]},
+  {mod, {emqx_kafka_bridge_app,[]}},
+  {env, []},
+  {licenses, ["Apache-2.0"]},
+  {maintainers, ["EMQ X Team <contact@emqx.io>"]},
+  {links, [{"Homepage", "https://emqx.io/"},
+           {"Github", "https://github.com/emqx/emqx-plugin-template"}
+          ]}
+ ]}.
