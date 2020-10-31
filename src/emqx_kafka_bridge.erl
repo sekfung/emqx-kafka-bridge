@@ -35,7 +35,7 @@
 
 -export([on_session_created/3, on_session_subscribed/4, on_session_unsubscribed/4, on_session_terminated/4]).
 
--export([on_message_publish/2, on_message_delivered/4, on_message_acked/4]).
+-export([on_message_publish/2, on_message_delivered/3, on_message_acked/3]).
 
 -export([description/0, register_metrics/0]).
 
@@ -61,10 +61,10 @@ load(Env) ->
 brod_init(_Env) ->
   % broker 代理服务器的地址
   {ok, BootstrapBrokers} = get_bootstrap_brokers(),
-  % data points 数据流主题及策略
-  {ok, DpTopic, _, _} = get_points_topic(),
-  % device status 设备状态流主题及策略
-  {ok, DsTopic, _, _} = get_status_topic(),
+%%  % data points 数据流主题及策略
+%%  {ok, DpTopic, _, _} = get_points_topic(),
+%%  % device status 设备状态流主题及策略
+%%  {ok, DsTopic, _, _} = get_status_topic(),
 
   ok = brod:start(),
 
@@ -92,61 +92,76 @@ brod_init(_Env) ->
 
 on_client_connected(Client = #{
   clientid := ClientId,
+  peerhost := {IPA, IPB, IPC, IPD},
   username := Username}, _Conn = #{
   connected_at := ConnectedAt
 }, _Env) ->
   ?LOG(info, "Client ~s connected.", [ClientId]),
+  IPAddress = io_lib:format("~p\.~p\.~p\.~p", [IPA, IPB, IPC, IPD]),
   Json = mochijson2:encode([
     {type, <<"connected">>},
     {clientid, ClientId},
     {username, Username},
+    {client_ip_address, unicode:characters_to_binary(IPAddress)},
     {cluster_node, node()},
     {ts, ConnectedAt}
   ]),
-  ok = produce_status(ClientId, Json),
+  ok = produce_device_status(ClientId, Username, Json),
   {ok, Client}.
 
 on_client_disconnected(_Client = #{
   clientid := ClientId,
-  username := Username}, Reason,
+  peerhost := {IPA, IPB, IPC, IPD},
+  username := Username
+}, Reason,
     _Conn = #{
       connected_at := ConnectedAt,
       disconnected_at := DisconnectedAt
     }, _Env) ->
   ?LOG(info, "Client ~s disconnected, reason: ~w", [ClientId, Reason]),
+  IPAddress = io_lib:format("~p\.~p\.~p\.~p", [IPA, IPB, IPC, IPD]),
   Json = mochijson2:encode([
     {type, <<"disconnected">>},
     {clientid, ClientId},
     {username, Username},
     {cluster_node, node()},
+    {client_ip_address, unicode:characters_to_binary(IPAddress)},
     {reason, Reason},
     {ts, ConnectedAt},
     {disconnected_at, DisconnectedAt}
   ]),
-  ok = produce_status(ClientId, Json),
+  ok = produce_device_status(ClientId, Username, Json),
   ok.
 
-on_client_subscribe(ClientId, Username, TopicTable, _Env) ->
-  ?LOG(info, "Client(~s/~s) will subscribe: ~p", [Username, ClientId, TopicTable]),
-  {ok, TopicTable}.
+on_client_subscribe(#{clientid := ClientId}, _Properties, TopicFilters, _Env) ->
+  ?LOG(info, "Client(~s) will subscribe: ~p~n", [ClientId, TopicFilters]),
+  {ok, TopicFilters}.
 
-on_client_unsubscribe(ClientId, Username, TopicTable, _Env) ->
-  ?LOG(info, "Client(~s/~s) unsubscribe ~p", [ClientId, Username, TopicTable]),
-  {ok, TopicTable}.
+on_client_unsubscribe(#{clientid := ClientId}, _Properties, TopicFilters, _Env) ->
+  ?LOG(info, "Client(~s) will unsubscribe ~p~n", [ClientId, TopicFilters]),
+  {ok, TopicFilters}.
 
-on_session_created(ClientId, Username, _Env) ->
-  ?LOG(info, "Session(~s/~s) created.", [ClientId, Username]).
+%%--------------------------------------------------------------------
+%% Session Lifecircle Hooks
+%%--------------------------------------------------------------------
 
-on_session_subscribed(ClientId, Username, {Topic, Opts}, _Env) ->
-  ?LOG(info, "Session(~s/~s) subscribed: ~p~n", [Username, ClientId, {Topic, Opts}]),
-  {ok, {Topic, Opts}}.
+on_session_created(#{clientid := ClientId}, SessInfo, _Env) ->
+  ?LOG(info, "Session(~s) created, Session Info:~n~p~n", [ClientId, SessInfo]).
 
-on_session_unsubscribed(ClientId, Username, {Topic, Opts}, _Env) ->
-  ?LOG(info, "Session(~s/~s) unsubscribed: ~p~n", [Username, ClientId, {Topic, Opts}]),
-  ok.
+on_session_subscribed(#{clientid := ClientId}, Topic, SubOpts, _Env) ->
+  ?LOG(info, "Session(~s) subscribed ~s with subopts: ~p~n", [ClientId, Topic, SubOpts]).
 
-on_session_terminated(ClientId, Username, Reason, _Env) ->
-  ?LOG(info, "Session(~s/~s) terminated: ~p.~n", [ClientId, Username, Reason]).
+on_session_unsubscribed(#{clientid := ClientId}, Topic, Opts, _Env) ->
+  ?LOG(info, "Session(~s) unsubscribed ~s with opts: ~p~n", [ClientId, Topic, Opts]).
+
+
+on_session_terminated(_ClientInfo = #{clientid := ClientId}, Reason, SessInfo, _Env) ->
+  ?LOG(info, "Session(~s) is terminated due to ~p~nSession Info: ~p~n",
+    [ClientId, Reason, SessInfo]).
+
+%%--------------------------------------------------------------------
+%% Message PubSub Hooks
+%%--------------------------------------------------------------------
 
 %% transform message and return
 on_message_publish(Message = #message{topic = <<"$SYS/", _/binary>>}, _Env) ->
@@ -154,42 +169,63 @@ on_message_publish(Message = #message{topic = <<"$SYS/", _/binary>>}, _Env) ->
   {ok, Message};
 
 on_message_publish(Message = #message{
-  from = {ClientId, Username},
+  id = MessageId,
+  from = ClientId,
   qos = QoS,
   topic = Topic,
   payload = Payload,
-  timestamp = Timestamp}, _Env) ->
+  flags = #{dup := Dup, retain := Retain},
+  headers = #{username := UserName},
+  timestamp = Timestamp
+}, _Env) ->
   ?LOG(info, "Publish ~s~n", [emqx_message:format(Message)]),
   Json = mochijson2:encode([
     {type, <<"published">>},
+    {message_id, hex:bin_to_hexstr(MessageId)},
     {clientid, ClientId},
-    {username, Username},
+    {username, UserName},
     {topic, Topic},
     {payload, Payload},
     {qos, QoS},
+    {dup, Dup},
+    {retain, Retain},
     {cluster_node, node()},
-    {ts, emqx_misc:now_to_ms(Timestamp)}
+    {ts, Timestamp}
   ]),
-  ok = produce_points(ClientId, Json),
+  ok = produce_device_points(Topic, ClientId, Json),
   {ok, Message}.
 
-on_message_delivered(ClientId, Username, Message, _Env) ->
-  ?LOG(info, "Delivered to client(~s/~s): ~s", [Username, ClientId, emqx_message:format(Message)]),
+on_message_delivered(_ClientInfo = #{clientid := ClientId}, Message, _Env) ->
+  ?LOG(info, "Message delivered to client(~s): ~s~n",
+    [ClientId, emqx_message:format(Message)]),
   {ok, Message}.
 
-on_message_acked(ClientId, Username, Message, _Env) ->
-  ?LOG(info, "Client(~s/~s) acked: ~s", [Username, ClientId, emqx_message:format(Message)]),
-  {ok, Message}.
+on_message_acked(_ClientInfo = #{clientid := ClientId}, Message, _Env) ->
+  ?LOG(info, "Message acked by client(~s): ~s~n",
+    [ClientId, emqx_message:format(Message)]).
 
-produce_points(ClientId, Json) ->
-  Topic = get_points_topic(),
-  produce(Topic, ClientId, Json),
+produce_device_points(Topic, ClientId, Json) ->
+  %% kafka topic legal char is [a-zA-Z0-9\\._\\-], CAN NOT contain '/'
+  TopicResult = lists:flatten(string:replace(lists:flatten(binary_to_list(Topic)), "/", "_", all)),
+  {ok, PartitionStrategy, PartitionWorkers} = get_points_topic(),
+  TopicInfo = {ok, unicode:characters_to_binary(TopicResult), PartitionStrategy, PartitionWorkers},
+  produce(TopicInfo, ClientId, Json),
   ok.
 
-produce_status(ClientId, Json) ->
-  Topic = get_status_topic(),
-  produce(Topic, ClientId, Json),
+produce_device_status(ClientId, UserName, Json) ->
+  {ProductKey, DeviceName} = getProductKeyAndDeviceName(UserName),
+  %% custom topic for post device status
+  Topic = io_lib:format("_sys_~s_~s_thing_event_status_post", [ProductKey, DeviceName]),
+  {ok, PartitionStrategy, PartitionWorkers} = get_status_topic(),
+  TopicInfo = {ok, unicode:characters_to_binary(Topic), PartitionStrategy, PartitionWorkers},
+  produce(TopicInfo, ClientId, Json),
   ok.
+
+getProductKeyAndDeviceName(UserName) ->
+  UserNameResult = string:tokens(lists:flatten(io_lib:format("~s", [UserName])), "&"),
+  ProductKey = lists:nth(2, UserNameResult),
+  DeviceName = lists:nth(1, UserNameResult),
+  {ProductKey, DeviceName}.
 
 produce(TopicInfo, ClientId, Json) ->
   case TopicInfo of
@@ -231,10 +267,10 @@ get_status_topic() ->
   get_topic(Values).
 
 get_topic(Values) ->
-  Topic = proplists:get_value(topic, Values),
+%%  Topic = proplists:get_value(topic, Values),
   PartitionStrategy = proplists:get_value(partition_strategy, Values),
   PartitionWorkers = proplists:get_value(partition_workers, Values),
-  {ok, Topic, PartitionStrategy, PartitionWorkers}.
+  {ok, PartitionStrategy, PartitionWorkers}.
 
 %% Called when the plugin application stop
 unload() ->
