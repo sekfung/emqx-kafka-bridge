@@ -21,7 +21,6 @@
   <component name="ChangeListManager">
     <list default="true" id="2c9463e1-8086-40e2-b04e-1cf8d3da5105" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/emqx_kafka_bridge.erl" beforeDir="false" afterPath="$PROJECT_DIR$/src/emqx_kafka_bridge.erl" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -108,7 +107,7 @@
       <workItem from="1603957404717" duration="3891000" />
       <workItem from="1603961423739" duration="13698000" />
       <workItem from="1604023149511" duration="13000" />
-      <workItem from="1604023685470" duration="6729000" />
+      <workItem from="1604023685470" duration="7088000" />
     </task>
     <servers />
   </component>

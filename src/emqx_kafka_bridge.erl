@@ -55,8 +55,8 @@ load(Env) ->
   emqx:hook('session.unsubscribed', fun ?MODULE:on_session_unsubscribed/4, [Env]),
   emqx:hook('session.terminated', fun ?MODULE:on_session_terminated/4, [Env]),
   emqx:hook('message.publish', fun ?MODULE:on_message_publish/2, [Env]),
-  emqx:hook('message.delivered', fun ?MODULE:on_message_delivered/4, [Env]),
-  emqx:hook('message.acked', fun ?MODULE:on_message_acked/4, [Env]).
+  emqx:hook('message.delivered', fun ?MODULE:on_message_delivered/3, [Env]),
+  emqx:hook('message.acked', fun ?MODULE:on_message_acked/3, [Env]).
 
 brod_init(_Env) ->
   % broker 代理服务器的地址
@@ -284,8 +284,8 @@ unload() ->
   emqx:unhook('session.unsubscribed', fun ?MODULE:on_session_unsubscribed/4),
   emqx:unhook('session.terminated', fun ?MODULE:on_session_terminated/4),
   emqx:unhook('message.publish', fun ?MODULE:on_message_publish/2),
-  emqx:unhook('message.delivered', fun ?MODULE:on_message_delivered/4),
-  emqx:unhook('message.acked', fun ?MODULE:on_message_acked/4),
+  emqx:unhook('message.delivered', fun ?MODULE:on_message_delivered/3),
+  emqx:unhook('message.acked', fun ?MODULE:on_message_acked/3),
   ?LOG(info, "Stopping brod kafka client."),
   % It is ok to leave brod application there.
   brod:stop_client(brod_client_1),
