@@ -181,7 +181,7 @@ on_message_publish(Message = #message{
   ?LOG(info, "Publish ~s~n", [emqx_message:format(Message)]),
   Json = mochijson2:encode([
     {type, <<"published">>},
-    {message_id, MessageId},
+    {message_id, lists:flatten(binary_to_list(MessageId))},
     {clientid, ClientId},
     {topic, Topic},
     {payload, Payload},
