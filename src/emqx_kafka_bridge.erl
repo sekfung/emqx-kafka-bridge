@@ -174,20 +174,18 @@ on_message_publish(Message = #message{
   qos = QoS,
   topic = Topic,
   payload = Payload,
-  flags = #{dup := Dup, retain := Retain},
-  headers = #{username := UserName},
+  flags = #{retain := Retain},
+  headers = #{},
   timestamp = Timestamp
 }, _Env) ->
   ?LOG(info, "Publish ~s~n", [emqx_message:format(Message)]),
   Json = mochijson2:encode([
     {type, <<"published">>},
-    {message_id, hex:bin_to_hexstr(MessageId)},
+    {message_id, MessageId},
     {clientid, ClientId},
-    {username, UserName},
     {topic, Topic},
     {payload, Payload},
     {qos, QoS},
-    {dup, Dup},
     {retain, Retain},
     {cluster_node, node()},
     {ts, Timestamp}
